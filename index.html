@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+
+<head>
+	<meta charset="UTF-8">
+	<title>ASHFAQ ALI ZARDARI | Generate and scan barcodes</title>
+	<!-- Generate Barcode library. -->
+	<script src="./jquery.min.js"></script>
+
+	<!-- Barcode Generate. -->
+	<script src="./JsBarcode.all.js"></script>
+
+	<!-- Barcode Scannner. -->
+	<script src="./quagga.min.js"></script>
+	<style>
+		#content {
+			padding: 4%;
+		}
+
+		#btnGenerateBarcode,
+		#btnDownloadBarcodeAsImage,
+		#hDownload {
+			display: none;
+		}
+
+		#barcodeContent {
+			text-align: center;
+		}
+
+		textarea {
+			padding: 1.4%;
+		}
+
+		button {
+			padding: .6%;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="content">
+		<h1>AAZ Barcode</h1>
+		<hr />
+		<div style="text-align: center;">
+			<h2>Generate Barcode</h2>
+			<textarea autofocus rows="6" cols="36" id="txt" placeholder="Enter barcode text here."></textarea>
+		</div>
+		<br><br>
+		<!-- Barcode image. -->
+		<div style="text-align: center;overflow-x: auto;">
+			<svg id="barcodeSvg" style="position: absolute;"></svg>
+			<img id="barcodeImg" />
+		</div>
+		<br>
+		<div id="barcodeContent">
+			<!-- Generate button. -->
+			<button id="btnGenerateBarcode">Generate Barcode</button>
+			<h2 id="hDownload">Download Generated Barcode</h2>
+			<!-- Download button. -->
+			<button id="btnDownloadBarcodeAsImage">Download Barcode as Image</button><br><br>
+			<h2>Scan Barcode</h2>
+			<button id="btnScanBarcode">Scan a new barcode (On WebCam)</button>
+			<br><br>
+			<!-- Barcode Scanner. -->
+
+			<div id="interactive" style="display: inline-grid;"></div>
+			<br><br><br>
+
+		</div>
+	</div>
+
+	<script type="text/javascript">
+
+		// Generating Barcode.
+
+		// Init Barcode Code128.
+		function initBarcodeCode128(ElementID, DataString) {
+			JsBarcode(ElementID, DataString, {
+				format: "CODE128",
+				displayValue: false,
+				fontSize: 24,
+				lineColor: "black"
+			});
+
+			// Png Image.
+			var base64 = 'data:image/svg+xml;base64,' + btoa((new XMLSerializer).serializeToString($("#barcodeSvg")[0]));
+			var img = document.getElementById("barcodeImg");
+			img.src = base64;
+			document.querySelector("#barcodeSvg").style.display = "none";
+			document.querySelector("#hDownload").style.display = "block";
+			document.querySelector("#btnDownloadBarcodeAsImage").style.display = "inline-block";
+		}
+
+		// Download Barcode.
+		function Download(src) {
+			var el = document.createElement("a");
+			el.setAttribute("href", src);
+			el.setAttribute("download", "img_barcode");
+			document.body.appendChild(el);
+			el.click();
+			el.remove();
+		}
+
+		function GetPngDataURL(ImgElementID) {
+			var img = document.getElementById(ImgElementID);
+			var canvas = document.createElement("canvas");
+			var w = img.width;
+			var h = img.height;
+			canvas.width = w;
+			canvas.height = h;
+			canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+			var imgURL = canvas.toDataURL("image/png");
+			return imgURL;
+		}
+
+		// Generate listener.
+		const btnGenerateBarcode = document.querySelector('#btnGenerateBarcode');
+		document.querySelector('textarea').addEventListener('input', function (event) {
+			if (this.value.length) {
+				document.querySelector('#btnGenerateBarcode').style.display = "inline-block";
+			} else {
+				document.querySelector('#btnGenerateBarcode').style.display = "none";
+			}
+		});
+		btnGenerateBarcode.addEventListener('click', function (event) {
+			if (document.querySelector('#txt').value.length) {
+				initBarcodeCode128("#barcodeSvg", document.querySelector('#txt').value);
+			} else {
+				alert("Please enter barcode text to scan.");
+			}
+		});
+
+		// Download img listener.
+		const btnDownloadBarcodeAsImage = document.querySelector('#btnDownloadBarcodeAsImage');
+		btnDownloadBarcodeAsImage.addEventListener('click', function (event) {
+			Download(GetPngDataURL("barcodeImg"));
+			document.querySelector("textarea").value = "";
+		});
+
+		// Scanning Barcode.
+
+		function Scan() {
+			Quagga.init({
+				inputStream: {
+					name: "Live",
+					type: "LiveStream",
+					target: document.querySelector('#interactive')
+				},
+				decoder: {
+					readers: ["code_128_reader"]
+				}
+			}, function (err) {
+				if (err) {
+					console.log(err);
+					return
+				}
+				console.log("Initialization finished. Ready to start");
+				Quagga.start();
+			});
+		}
+		function StopScan() {
+			Quagga.stop();
+			document.querySelector('#interactive').innerHTML = "";
+		}
+
+		const btnScanBarcode = document.querySelector('#btnScanBarcode');
+		btnScanBarcode.addEventListener('click', function (event) {
+			Scan();
+		});
+
+		Quagga.onDetected(function (result) {
+			StopScan();
+			var h2 = document.createElement("h2");
+			var div = document.createElement("div");
+			h2.innerHTML = `Scanned Result is: ${result.codeResult.code}`;
+			div.style.textAlign = 'center';
+			div.append(h2);
+			document.querySelector("#barcodeContent").append(div);
+			console.log("Barcode detected and processed : [" + result.codeResult.code + "]");
+		});
+
+	</script>
+
+
+</body>
+
+</html>
