@@ -1,4 +1,4 @@
-# [GenerateScanBarcode](https://ashfaqalizardariofficial.github.io/GenerateScanBarcode.github.io) 
+# [GenerateScanBarcode](https://ashfaqalizardariofficial.github.io/GenerateScanBarcode) 
 by ***Ashfaq Ali Zardari*** 
 The JavaScript programming code to generate and scan barcodes.
 
